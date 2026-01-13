@@ -280,3 +280,58 @@ input:focus { outline: none; border-color: var(--accent); background: white; }
     main { margin-left: 70px; padding: 20px; }
     .dashboard-grid { grid-template-columns: 1fr; }
 }
+
+/* Update this section */
+.list-item {
+    background: var(--card-bg);
+    padding: 16px;
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    border: 1px solid var(--border);
+    /* Flexbox setup */
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    transition: background 0.1s;
+}
+.list-item:hover { border-color: var(--accent); background: #f8fafc; }
+
+/* Container for the 3 buttons side-by-side */
+.list-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0; /* Prevents buttons from squishing */
+    margin-left: 10px;
+}
+
+/* Button Colors */
+.btn-view {
+    background-color: var(--green);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.btn-edit-list {
+    background-color: #f59e0b; /* Amber/Yellow */
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.btn-delete-list {
+    background-color: var(--red);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+}
