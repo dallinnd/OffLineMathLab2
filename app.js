@@ -9,7 +9,6 @@ const app = {
         app.loadData();
         app.nav('home');
         
-        // CLICK OUTSIDE TO CLOSE POPUP
         window.onclick = (event) => {
             if (event.target.classList.contains('modal')) {
                 app.closeModal(event.target.id);
@@ -27,6 +26,130 @@ const app = {
     saveData: () => {
         localStorage.setItem('mathLabStudents', JSON.stringify(app.data.students));
         localStorage.setItem('mathLabItems', JSON.stringify(app.data.items));
+    },
+
+    // --- IMPORT / EXPORT LOGIC ---
+
+    // 1. Export Data (ZIP of 2 CSVs)
+    exportData: () => {
+        if (!window.JSZip) {
+            alert("Export library loading... please try again in a moment.");
+            return;
+        }
+
+        const zip = new JSZip();
+
+        // Create Students CSV
+        // Header: Name,NetID,Phone
+        let studentCSV = "Name,NetID,Phone\n";
+        app.data.students.forEach(s => {
+            // Escape commas in names just in case
+            const cleanName = s.name.includes(',') ? `"${s.name}"` : s.name;
+            studentCSV += `${cleanName},${s.netId},${s.phone}\n`;
+        });
+        zip.file("students.csv", studentCSV);
+
+        // Create Items CSV
+        // Header: ItemName,ItemNumber,CheckedOutTo
+        let itemCSV = "ItemName,ItemNumber,CheckedOutTo\n";
+        app.data.items.forEach(i => {
+            const cleanName = i.name.includes(',') ? `"${i.name}"` : i.name;
+            const holder = i.checkedOutTo ? i.checkedOutTo : "";
+            itemCSV += `${cleanName},${i.number},${holder}\n`;
+        });
+        zip.file("items.csv", itemCSV);
+
+        // Generate Zip and Download
+        zip.generateAsync({type:"blob"}).then(function(content) {
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(content);
+            link.download = "MathLab_Inventory_Backup.zip";
+            link.click();
+        });
+    },
+
+    // 2. Import Students
+    importStudents: (input) => {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const text = e.target.result;
+            const rows = text.split('\n');
+            let addedCount = 0;
+
+            // Skip Header row (index 0)
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i].trim();
+                if (!row) continue;
+
+                // Simple parse assuming format: Name,NetID,Phone
+                // (Note: This simple split fails if Name has a comma like "Doe, John". 
+                // For a simple inventory, we assume names are "John Doe")
+                const cols = row.split(',');
+                if (cols.length < 3) continue;
+
+                const name = cols[0].trim().replace(/"/g, ''); // remove quotes if present
+                const netId = cols[1].trim();
+                const phone = cols[2].trim();
+
+                // DUPLICATE CHECK
+                if (!app.data.students.find(s => s.netId === netId)) {
+                    app.data.students.unshift({ 
+                        name, netId, phone, timestamp: Date.now() 
+                    });
+                    addedCount++;
+                }
+            }
+
+            app.saveData();
+            alert(`Import Complete!\nAdded ${addedCount} new students.`);
+            input.value = ''; // Reset input so same file can be selected again if needed
+            app.renderStudents(); // Refresh background list
+        };
+        reader.readAsText(file);
+    },
+
+    // 3. Import Items
+    importItems: (input) => {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const text = e.target.result;
+            const rows = text.split('\n');
+            let addedCount = 0;
+
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i].trim();
+                if (!row) continue;
+
+                // Format: ItemName,ItemNumber,CheckedOutTo
+                const cols = row.split(',');
+                if (cols.length < 2) continue;
+
+                const name = cols[0].trim().replace(/"/g, '');
+                const number = cols[1].trim();
+                let checkedOutTo = cols[2] ? cols[2].trim() : null;
+                if (checkedOutTo === "") checkedOutTo = null;
+
+                // DUPLICATE CHECK
+                if (!app.data.items.find(item => item.number === number)) {
+                    app.data.items.unshift({ 
+                        name, number, checkedOutTo, timestamp: Date.now() 
+                    });
+                    addedCount++;
+                }
+            }
+
+            app.saveData();
+            alert(`Import Complete!\nAdded ${addedCount} new items.`);
+            input.value = '';
+            app.renderItems();
+        };
+        reader.readAsText(file);
     },
 
     // --- Navigation ---
@@ -56,7 +179,6 @@ const app = {
         app.openPersonModal(netId);
     },
 
-    // *** HERE ARE THE BUTTONS FOR EACH STUDENT ***
     renderStudents: () => {
         const query = document.getElementById('search-students').value.toLowerCase();
         const list = document.getElementById('student-list');
@@ -103,7 +225,6 @@ const app = {
         alert(`"${name}" added to Inventory`);
     },
 
-    // *** HERE ARE THE BUTTONS FOR EACH ITEM ***
     renderItems: () => {
         const query = document.getElementById('search-items').value.toLowerCase();
         const list = document.getElementById('item-list');
@@ -155,33 +276,27 @@ const app = {
                 </div>
             </div>
         `;
-        
-        // (Note: Removed duplicate Delete button from popup since it is now on the list)
 
         app.renderPersonCheckoutList();
         document.getElementById('modal-person').classList.remove('hidden');
     },
 
     deletePerson: (netId) => {
-        // Find name for confirmation message
         const student = app.data.students.find(s => s.netId === netId);
         const name = student ? student.name : netId;
 
         if(!confirm(`DELETE STUDENT: ${name}?\n\nThis will return all items checked out to them and permanently delete the student record.`)) return;
 
-        // 1. Return all items
         app.data.items.forEach(i => {
             if (i.checkedOutTo === netId) {
                 i.checkedOutTo = null;
             }
         });
 
-        // 2. Delete Student
         app.data.students = app.data.students.filter(s => s.netId !== netId);
-
         app.saveData();
-        app.renderStudents(); // Refresh the list to remove the deleted row
-        app.closeModal('modal-person'); // Close modal if it was open
+        app.renderStudents();
+        app.closeModal('modal-person');
     },
 
     renderPersonCheckoutList: () => {
@@ -212,8 +327,6 @@ const app = {
             student.name = newName;
             student.phone = newPhone;
             app.saveData();
-            
-            // Refresh views
             if (!document.getElementById('modal-person').classList.contains('hidden')) {
                  app.openPersonModal(netId);
             }
@@ -268,7 +381,7 @@ const app = {
         
         app.data.items = app.data.items.filter(i => i.number !== number);
         app.saveData();
-        app.renderItems(); // Refresh the list
+        app.renderItems();
         app.closeModal('modal-item');
     },
 
@@ -278,9 +391,7 @@ const app = {
         if (newName) {
             item.name = newName;
             app.saveData();
-            
-            // Refresh views
-             if (!document.getElementById('modal-item').classList.contains('hidden')) {
+            if (!document.getElementById('modal-item').classList.contains('hidden')) {
                 app.openItemModal(number);
              }
             app.renderItems();
@@ -301,8 +412,8 @@ const app = {
         const item = app.data.items.find(i => i.number === itemNumber);
         item.checkedOutTo = null;
         app.saveData();
-        app.openItemModal(itemNumber); // Refresh item view
-        app.renderItems(); // Refresh background list
+        app.openItemModal(itemNumber);
+        app.renderItems();
     },
 
     // 4. Search & Link
