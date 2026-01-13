@@ -253,6 +253,17 @@ input:focus { outline: none; border-color: var(--accent); background: white; }
     max-height: 85vh; overflow-y: auto;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
+/* Larger Close X */
+.close-modal {
+    float: right;
+    font-size: 40px; /* Increased from 28px */
+    font-weight: bold;
+    color: #64748b;
+    cursor: pointer;
+    line-height: 20px;
+    margin-top: -10px; /* Adjust alignment */
+}
+.close-modal:hover { color: var(--red); }
 
 /* Checkout Pills */
 .checkout-item-pill {
