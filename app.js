@@ -1,7 +1,7 @@
 const app = {
     data: {
-        students: [], // { netId, name, phone, timestamp }
-        items: []     // { number, name, checkedOutTo: netId|null, timestamp }
+        students: [], 
+        items: []     
     },
     currentStudent: null,
 
@@ -26,8 +26,6 @@ const app = {
     nav: (pageId) => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(`page-${pageId}`).classList.add('active');
-        
-        // Refresh lists if entering those pages
         if(pageId === 'students') app.renderStudents();
         if(pageId === 'items') app.renderItems();
     },
@@ -39,19 +37,14 @@ const app = {
         const netId = document.getElementById('new-student-netid').value;
         const phone = document.getElementById('new-student-phone').value;
 
-        // Validation: Check duplicate NetID
         if (app.data.students.find(s => s.netId === netId)) {
             alert('A student with this NetID already exists.');
             return;
         }
 
-        const newStudent = { name, netId, phone, timestamp: Date.now() };
-        app.data.students.unshift(newStudent); // Add to top of list
+        app.data.students.unshift({ name, netId, phone, timestamp: Date.now() });
         app.saveData();
-        
         e.target.reset();
-
-        // Redirect flow: Go to existing students -> Open the new student's popup
         app.nav('students');
         app.openPersonModal(netId);
     },
@@ -61,7 +54,6 @@ const app = {
         const list = document.getElementById('student-list');
         list.innerHTML = '';
 
-        // Search Logic: Includes Name, NetID, OR Phone
         const filtered = app.data.students.filter(s => 
             s.name.toLowerCase().includes(query) || 
             s.netId.toLowerCase().includes(query) ||
@@ -74,7 +66,7 @@ const app = {
             div.innerHTML = `
                 <div>
                     <strong>${s.name}</strong><br>
-                    <small style="color:#666">${s.netId} | ${s.phone}</small>
+                    <small style="color:#64748b">${s.netId} | ${s.phone}</small>
                 </div>
                 <button class="btn-secondary" onclick="app.openPersonModal('${s.netId}')">View</button>
             `;
@@ -96,8 +88,6 @@ const app = {
         app.data.items.unshift({ name, number, checkedOutTo: null, timestamp: Date.now() });
         app.saveData();
         e.target.reset();
-        
-        // Confirmation feedback
         alert(`"${name}" added to Inventory`);
     },
 
@@ -106,7 +96,6 @@ const app = {
         const list = document.getElementById('item-list');
         list.innerHTML = '';
 
-        // Search Logic: Includes Name OR Number
         const filtered = app.data.items.filter(i => 
             i.name.toLowerCase().includes(query) || 
             i.number.toLowerCase().includes(query)
@@ -116,10 +105,9 @@ const app = {
             const div = document.createElement('div');
             div.className = 'list-item';
             
-            // Visual badge for status
             const statusBadge = i.checkedOutTo 
-                ? `<span style="background:var(--red); color:white; padding:2px 8px; border-radius:10px; font-size:0.8rem">Checked Out</span>` 
-                : `<span style="background:var(--green); color:white; padding:2px 8px; border-radius:10px; font-size:0.8rem">Available</span>`;
+                ? `<span style="background:#fee2e2; color:#ef4444; padding:2px 8px; border-radius:10px; font-size:0.8rem; font-weight:bold;">Checked Out</span>` 
+                : `<span style="background:#d1fae5; color:#10b981; padding:2px 8px; border-radius:10px; font-size:0.8rem; font-weight:bold;">Available</span>`;
 
             div.innerHTML = `
                 <div><strong>${i.name}</strong> <small>(#${i.number})</small></div> 
@@ -132,7 +120,7 @@ const app = {
 
     // --- Modals & Popups ---
     
-    // 1. Person Popup
+    // 1. Person Popup & Delete
     openPersonModal: (netId) => {
         const student = app.data.students.find(s => s.netId === netId);
         if (!student) return;
@@ -142,36 +130,67 @@ const app = {
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:start;">
                 <div>
-                    <h2 style="margin:0">${student.name}</h2>
-                    <p style="margin:5px 0; color:#555">NetID: ${student.netId}</p>
-                    <p style="margin:0; color:#555">Phone: ${student.phone}</p>
+                    <h2 style="margin:0; border:none;">${student.name}</h2>
+                    <p style="margin:5px 0; color:#64748b">NetID: ${student.netId}</p>
+                    <p style="margin:0; color:#64748b">Phone: ${student.phone}</p>
                 </div>
-                <button class="btn-green" onclick="app.editPerson('${student.netId}')">Edit Info</button>
+                <button class="btn-green" onclick="app.editPerson('${student.netId}')">Edit</button>
             </div>
+        `;
+        
+        // Add Delete Button Logic specifically for this modal
+        const existingDeleteBtn = document.getElementById('btn-delete-person-placeholder');
+        if(existingDeleteBtn) existingDeleteBtn.remove();
+        
+        // We append the delete button at the very bottom
+        const deleteBtnHtml = `
+            <button class="btn-delete" id="btn-delete-person-placeholder" 
+            onclick="app.deletePerson('${student.netId}')">Delete Student</button>
         `;
 
         app.renderPersonCheckoutList();
+        
+        // Inject delete button at the end of content
+        document.querySelector('#modal-person .modal-content').insertAdjacentHTML('beforeend', deleteBtnHtml);
         document.getElementById('modal-person').classList.remove('hidden');
+    },
+
+    deletePerson: (netId) => {
+        if(!confirm(`DELETE STUDENT?\n\nThis will return all items checked out to ${netId} and permanently delete the student record.`)) return;
+
+        // 1. Return all items
+        app.data.items.forEach(i => {
+            if (i.checkedOutTo === netId) {
+                i.checkedOutTo = null;
+            }
+        });
+
+        // 2. Delete Student
+        app.data.students = app.data.students.filter(s => s.netId !== netId);
+
+        app.saveData();
+        
+        // Cleanup UI
+        document.getElementById('btn-delete-person-placeholder').remove();
+        app.closeModal('modal-person');
+        app.renderStudents();
     },
 
     renderPersonCheckoutList: () => {
         const list = document.getElementById('person-checkout-list');
         list.innerHTML = '';
-        
-        // Link Section: Find all items linked to this person
         const myItems = app.data.items.filter(i => i.checkedOutTo === app.currentStudent.netId);
 
         if (myItems.length === 0) {
-            list.innerHTML = `<p style="text-align:center; color:#999; margin-top:20px;">No items checked out.</p>`;
+            list.innerHTML = `<p style="text-align:center; color:#94a3b8; margin-top:20px;">No items checked out.</p>`;
         }
 
         myItems.forEach(i => {
             const pill = document.createElement('div');
             pill.className = 'checkout-item-pill';
-            // Added logic: Clicking the X "unlinks" the item
             pill.innerHTML = `
                 <span>${i.name} (#${i.number})</span>
-                <button class="btn-remove" onclick="app.returnItem('${i.number}')">X</button>
+                <button class="btn-remove" onclick="app.returnItem('${i.number}')">✕</button>
             `;
             list.appendChild(pill);
         });
@@ -181,46 +200,42 @@ const app = {
         const student = app.data.students.find(s => s.netId === netId);
         const newName = prompt("Edit Name:", student.name);
         const newPhone = prompt("Edit Phone:", student.phone);
-        
         if (newName && newPhone) {
             student.name = newName;
             student.phone = newPhone;
             app.saveData();
-            app.openPersonModal(netId); // refresh display
-            app.renderStudents(); // refresh background list
+            // Refresh
+            document.getElementById('btn-delete-person-placeholder').remove();
+            app.openPersonModal(netId);
+            app.renderStudents(); 
         }
     },
 
-    // 2. Item Popup
+    // 2. Item Popup & Delete
     openItemModal: (number) => {
         const item = app.data.items.find(i => i.number === number);
         const container = document.getElementById('item-info-display');
-        
-        // Check if linked to a person
         const holder = item.checkedOutTo 
             ? app.data.students.find(s => s.netId === item.checkedOutTo)
             : null;
 
         let linkSectionHtml = '';
-        
         if (holder) {
-            // LINK SECTION: Linked to a Person
             linkSectionHtml = `
-                <div style="background:#fff0f0; border:1px solid #ffcccc; padding:15px; border-radius:8px; margin-top:20px;">
-                    <h4 style="margin-top:0; color:var(--red)">Currently Linked To:</h4>
+                <div style="background:#fff1f2; border:1px solid #fecdd3; padding:15px; border-radius:8px; margin-top:20px;">
+                    <h4 style="margin-top:0; color:#be123c">Currently Linked To:</h4>
                     <p><strong>${holder.name}</strong></p>
-                    <p>${holder.netId} | ${holder.phone}</p>
-                    <button class="btn-secondary" style="background:var(--red); width:100%" onclick="app.returnItemFromItemPage('${item.number}')">
+                    <p>${holder.netId}</p>
+                    <button class="btn-secondary" style="background:#be123c; width:100%" onclick="app.returnItemFromItemPage('${item.number}')">
                         Return Item (Unlink)
                     </button>
                 </div>
             `;
         } else {
-            // LINK SECTION: Available
             linkSectionHtml = `
-                <div style="background:#f0fff4; border:1px solid #ccffdd; padding:15px; border-radius:8px; margin-top:20px; text-align:center;">
-                    <h4 style="margin:0; color:var(--green)">Status: Available</h4>
-                    <p style="font-size:0.9rem; color:#666">To link this item, go to a Student's page.</p>
+                <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:15px; border-radius:8px; margin-top:20px; text-align:center;">
+                    <h4 style="margin:0; color:#15803d">Status: Available</h4>
+                    <p style="font-size:0.9rem; color:#64748b">To link this item, go to a Student's page.</p>
                 </div>
             `;
         }
@@ -228,14 +243,24 @@ const app = {
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:start;">
                 <div>
-                    <h2 style="margin:0">${item.name}</h2>
-                    <p style="margin:5px 0; color:#555">Item #: ${item.number}</p>
+                    <h2 style="margin:0; border:none;">${item.name}</h2>
+                    <p style="margin:5px 0; color:#64748b">Item #: ${item.number}</p>
                 </div>
-                <button class="btn-green" onclick="app.editItem('${item.number}')">Edit Info</button>
+                <button class="btn-green" onclick="app.editItem('${item.number}')">Edit</button>
             </div>
             ${linkSectionHtml}
+            <button class="btn-delete" onclick="app.deleteItem('${item.number}')">Delete Item</button>
         `;
         document.getElementById('modal-item').classList.remove('hidden');
+    },
+
+    deleteItem: (number) => {
+        if(!confirm(`DELETE ITEM?\n\nIf this item is checked out, it will be unlinked from the student.`)) return;
+        
+        app.data.items = app.data.items.filter(i => i.number !== number);
+        app.saveData();
+        app.closeModal('modal-item');
+        app.renderItems();
     },
 
     editItem: (number) => {
@@ -244,35 +269,34 @@ const app = {
         if (newName) {
             item.name = newName;
             app.saveData();
-            app.openItemModal(number); // refresh popup
-            app.renderItems(); // refresh list
+            app.openItemModal(number);
+            app.renderItems();
         }
     },
 
-    // Shared "Unlink" Logic
+    // 3. Shared Logic
     returnItem: (itemNumber) => {
-        if(!confirm("Are you sure you want to return this item?")) return;
+        if(!confirm("Return this item?")) return;
         const item = app.data.items.find(i => i.number === itemNumber);
         item.checkedOutTo = null;
         app.saveData();
-        app.renderPersonCheckoutList(); // Refresh person view
+        app.renderPersonCheckoutList();
     },
 
     returnItemFromItemPage: (itemNumber) => {
-        if(!confirm("Are you sure you want to return this item?")) return;
+        if(!confirm("Return this item?")) return;
         const item = app.data.items.find(i => i.number === itemNumber);
         item.checkedOutTo = null;
         app.saveData();
         app.openItemModal(itemNumber); // Refresh item view
-        app.renderItems(); // Refresh list
+        app.renderItems(); // Refresh background list
     },
 
-
-    // 3. Checkout (Search & Link)
+    // 4. Search & Link
     openItemSearchModal: () => {
         document.getElementById('modal-person').classList.add('hidden');
         document.getElementById('modal-item-search').classList.remove('hidden');
-        document.getElementById('search-checkout-items').value = ''; // Clear search
+        document.getElementById('search-checkout-items').value = '';
         app.renderCheckoutSearch();
     },
 
@@ -286,21 +310,19 @@ const app = {
         const list = document.getElementById('checkout-search-list');
         list.innerHTML = '';
 
-        // Filter: Must be available AND match search
         const available = app.data.items.filter(i => 
             !i.checkedOutTo && 
             (i.name.toLowerCase().includes(query) || i.number.toLowerCase().includes(query))
         );
 
         if (available.length === 0) {
-            list.innerHTML = `<p style="text-align:center; padding:20px;">No available items found.</p>`;
+            list.innerHTML = `<p style="text-align:center; padding:20px; color:#94a3b8">No available items found.</p>`;
         }
 
         available.forEach(i => {
             const div = document.createElement('div');
             div.className = 'list-item';
             div.innerHTML = `<strong>${i.name}</strong> <small>(#${i.number})</small>`;
-            // Action: Link this item to the current student
             div.onclick = () => app.checkoutItem(i.number);
             list.appendChild(div);
         });
@@ -308,14 +330,13 @@ const app = {
 
     checkoutItem: (itemNumber) => {
         const item = app.data.items.find(i => i.number === itemNumber);
-        // THE LINKING HAPPENS HERE
         item.checkedOutTo = app.currentStudent.netId; 
         app.saveData();
         app.closeItemSearchModal();
         app.renderPersonCheckoutList(); 
     },
 
-    // 4. Quick Add (Create & Link immediately)
+    // 5. Quick Add
     openQuickItemAdd: () => {
         document.getElementById('modal-quick-item').classList.remove('hidden');
     },
@@ -330,17 +351,22 @@ const app = {
             return;
         }
 
-        // Create & Link
         app.data.items.unshift({ name, number, checkedOutTo: app.currentStudent.netId, timestamp: Date.now() });
         app.saveData();
-        
         e.target.reset();
         document.getElementById('modal-quick-item').classList.add('hidden');
         app.renderPersonCheckoutList();
     },
 
     closeModal: (id) => {
-        document.getElementById(id).classList.add('hidden');
+        const el = document.getElementById(id);
+        el.classList.add('hidden');
+        
+        // Safety cleanup for dynamically added buttons
+        if(id === 'modal-person') {
+            const btn = document.getElementById('btn-delete-person-placeholder');
+            if(btn) btn.remove();
+        }
     }
 };
 
