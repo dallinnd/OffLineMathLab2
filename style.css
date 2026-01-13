@@ -1,0 +1,222 @@
+:root {
+    --primary: #002E5D; /* BYU Navy-ish */
+    --accent: #0062B8;
+    --bg: #f4f4f4;
+    --white: #ffffff;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --shadow: 0 4px 6px rgba(0,0,0,0.1);
+    --radius: 12px;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    display: flex;
+    background-color: var(--bg);
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 60px;
+    background-color: var(--primary);
+    height: 100vh;
+    transition: width 0.3s ease;
+    overflow: hidden;
+    position: fixed;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
+}
+
+.sidebar:hover {
+    width: 250px;
+}
+
+.menu-items button {
+    background: none;
+    border: none;
+    color: white;
+    padding: 20px;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-size: 1rem;
+    white-space: nowrap;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.menu-items button:hover {
+    background-color: var(--accent);
+}
+
+/* Main Content */
+main {
+    flex: 1;
+    margin-left: 60px;
+    padding: 20px;
+    overflow-y: auto;
+    height: 100vh;
+    box-sizing: border-box;
+}
+
+.page {
+    display: none;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.page.active {
+    display: block;
+    animation: fadein 0.3s;
+}
+
+@keyframes fadein {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Home Grid */
+.warning-banner {
+    background-color: #ffeaa7;
+    color: #d35400;
+    padding: 15px;
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    text-align: center;
+    border: 1px solid #fdcb6e;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.dashboard-grid button {
+    padding: 50px;
+    font-size: 1.2rem;
+    border: none;
+    background: var(--white);
+    box-shadow: var(--shadow);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.dashboard-grid button:hover {
+    transform: translateY(-5px);
+    background-color: #eef2f5;
+}
+
+/* Forms */
+label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.btn-primary {
+    margin-top: 20px;
+    padding: 12px 24px;
+    background-color: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1rem;
+}
+
+.btn-green { background-color: var(--green); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+.btn-secondary { background-color: #95a5a6; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+.btn-back { background-color: #7f8c8d; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; margin-right: 10px; }
+
+/* Lists */
+.list-container {
+    margin-top: 20px;
+}
+
+.list-item {
+    background: white;
+    padding: 15px;
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Modals */
+.modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+}
+
+.modal.hidden { display: none; }
+
+.modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.close-modal {
+    float: right;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+/* Checkout List */
+.checkout-list {
+    margin-top: 15px;
+}
+
+.checkout-item-pill {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ecf0f1;
+    padding: 10px 15px;
+    border-radius: 25px;
+    margin-bottom: 8px;
+}
+
+.btn-remove {
+    background: var(--red);
+    color: white;
+    border: none;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

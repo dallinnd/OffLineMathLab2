@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Off-line Math Lab Inventory</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="menu-items">
+            <button onclick="app.nav('home')">Home</button>
+            <button onclick="app.nav('add-student')">Add New Student</button>
+            <button onclick="app.nav('students')">Existing Students</button>
+            <button onclick="app.nav('add-item')">Add Item</button>
+            <button onclick="app.nav('items')">Existing Items</button>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        
+        <section id="page-home" class="page active">
+            <div class="warning-banner">
+                ⚠️ NOTICE: Data is stored locally on this device. This app does not have access to campus student information.
+            </div>
+            <div class="dashboard-grid">
+                <button onclick="app.nav('add-student')">Add New Student</button>
+                <button onclick="app.nav('students')">Existing Students</button>
+                <button onclick="app.nav('add-item')">Add Item</button>
+                <button onclick="app.nav('items')">Existing Items</button>
+            </div>
+        </section>
+
+        <section id="page-add-student" class="page">
+            <h2>Add New Student</h2>
+            <form id="form-add-student" onsubmit="app.saveNewStudent(event)">
+                <label>First and Last Name</label>
+                <input type="text" id="new-student-name" required>
+                
+                <label>NetID</label>
+                <input type="text" id="new-student-netid" required>
+                
+                <label>Phone Number</label>
+                <input type="tel" id="new-student-phone" required>
+                
+                <button type="submit" class="btn-primary">Next</button>
+            </form>
+        </section>
+
+        <section id="page-students" class="page">
+            <div class="header-row">
+                <h2>Existing Students</h2>
+                <input type="text" id="search-students" placeholder="Search students..." onkeyup="app.renderStudents()">
+            </div>
+            <div id="student-list" class="list-container"></div>
+        </section>
+
+        <section id="page-add-item" class="page">
+            <h2>Add New Item</h2>
+            <form id="form-add-item" onsubmit="app.saveNewItem(event)">
+                <label>Item Name</label>
+                <input type="text" id="new-item-name" required>
+                
+                <label>Item Number</label>
+                <input type="text" id="new-item-number" required>
+                
+                <button type="submit" class="btn-primary">Save</button>
+            </form>
+        </section>
+
+        <section id="page-items" class="page">
+            <div class="header-row">
+                <h2>Existing Items</h2>
+                <input type="text" id="search-items" placeholder="Search items..." onkeyup="app.renderItems()">
+            </div>
+            <div id="item-list" class="list-container"></div>
+        </section>
+
+    </main>
+
+    <div id="modal-person" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal" onclick="app.closeModal('modal-person')">&times;</span>
+            <div id="person-info-display"></div>
+            
+            <hr>
+            
+            <div class="checkout-section">
+                <h3>Checked-Out Items</h3>
+                <div class="checkout-actions">
+                    <button class="btn-secondary" onclick="app.openItemSearchModal()">Add Existing Item</button>
+                    <button class="btn-secondary" onclick="app.openQuickItemAdd()">Add New Item</button>
+                </div>
+                <div id="person-checkout-list" class="checkout-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-item" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal" onclick="app.closeModal('modal-item')">&times;</span>
+            <div id="item-info-display"></div>
+        </div>
+    </div>
+
+    <div id="modal-item-search" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header-row">
+                <button class="btn-back" onclick="app.closeItemSearchModal()">Back</button>
+                <h3>Select Item to Checkout</h3>
+            </div>
+            <input type="text" id="search-checkout-items" placeholder="Search items..." onkeyup="app.renderCheckoutSearch()">
+            <div id="checkout-search-list" class="list-container"></div>
+        </div>
+    </div>
+
+    <div id="modal-quick-item" class="modal hidden">
+        <div class="modal-content">
+            <h3>Quick Add Item</h3>
+            <form onsubmit="app.saveQuickItem(event)">
+                <label>Item Name</label>
+                <input type="text" id="quick-item-name" required>
+                <label>Item Number</label>
+                <input type="text" id="quick-item-number" required>
+                <button type="submit" class="btn-primary">Save & Checkout</button>
+                <button type="button" class="btn-text" onclick="app.closeModal('modal-quick-item')">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
