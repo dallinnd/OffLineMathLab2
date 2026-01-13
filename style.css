@@ -175,6 +175,52 @@ input:focus { outline: none; border-color: var(--accent); background: white; }
 .btn-delete { background-color: transparent; color: var(--red); border: 1px solid var(--red); padding: 10px; width: 100%; border-radius: 10px; cursor: pointer; margin-top: 30px; font-weight: bold; }
 .btn-delete:hover { background-color: var(--red); color: white; }
 
+/* Back Button (in Search Popup) */
+.btn-back {
+    /* Match geometry of btn-green */
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 25px;
+    padding-right: 25px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    
+    /* New Colors: White with Black Outline */
+    background-color: white;
+    color: black;
+    border: 1px solid black;
+    
+    /* Spacing */
+    margin-right: 15px;
+}
+
+/* Cancel Button (in Quick Add Popup) */
+.btn-text {
+    /* Match geometry of btn-green */
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 25px;
+    padding-right: 25px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%; /* Full width to match the Save button above it */
+    
+    /* New Colors: White with Black Outline */
+    background-color: white;
+    color: black;
+    border: 1px solid black;
+    
+    /* Specific requirement: 10px margin top */
+    margin-top: 10px;
+}
+
+/* Hover effects for both (Optional but nice) */
+.btn-back:hover, .btn-text:hover {
+    background-color: #f1f5f9; /* Very light grey on hover */
+}
+
 /* Lists */
 .list-container { margin-top: 20px; }
 .list-item {
@@ -214,8 +260,8 @@ input:focus { outline: none; border-color: var(--accent); background: white; }
     background: #f1f5f9;
     padding: 12px 16px;
     border-radius: 10px;
-    margin-bottom: 4px;
-    Margin-top: 4px;
+    margin-bottom: 8px;
+    Margin-top: 8px;
     border: 1px solid var(--border);
 }
 .btn-remove {
@@ -230,7 +276,7 @@ input:focus { outline: none; border-color: var(--accent); background: white; }
 @media (max-width: 768px) {
     .sidebar { width: 70px; padding-top: 10px; }
     .sidebar button { font-size: 0; text-align: center; padding: 20px 0; }
-    .sidebar button::before { content: 'â—'; font-size: 20px; color: #94a3b8; }
+    .sidebar button::before { content: '●'; font-size: 20px; color: #94a3b8; }
     main { margin-left: 70px; padding: 20px; }
     .dashboard-grid { grid-template-columns: 1fr; }
 }
