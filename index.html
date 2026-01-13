@@ -6,6 +6,7 @@
     <title>Off-line Math Lab Inventory</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 
@@ -23,13 +24,33 @@
         
         <section id="page-home" class="page active">
             <div class="warning-banner">
-                ⚠️ NOTICE: Data is stored locally on this device. This app does not have access to campus student information.
+                ⚠️ NOTICE: Data is stored locally on this device.
             </div>
+            
             <div class="dashboard-grid">
                 <button onclick="app.nav('add-student')">Add New Student</button>
                 <button onclick="app.nav('students')">Existing Students</button>
                 <button onclick="app.nav('add-item')">Add Item</button>
                 <button onclick="app.nav('items')">Existing Items</button>
+            </div>
+
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid var(--border);">
+                <h3>Data Management</h3>
+                <div class="data-controls">
+                    <button class="btn-data download" onclick="app.exportData()">
+                        Download Backup (.zip)
+                    </button>
+                    
+                    <button class="btn-data upload" onclick="document.getElementById('upload-students').click()">
+                        Upload Students (.csv)
+                    </button>
+                    <button class="btn-data upload" onclick="document.getElementById('upload-items').click()">
+                        Upload Items (.csv)
+                    </button>
+                </div>
+
+                <input type="file" id="upload-students" accept=".csv" style="display:none" onchange="app.importStudents(this)">
+                <input type="file" id="upload-items" accept=".csv" style="display:none" onchange="app.importItems(this)">
             </div>
         </section>
 
@@ -38,13 +59,10 @@
             <form id="form-add-student" onsubmit="app.saveNewStudent(event)">
                 <label>First and Last Name</label>
                 <input type="text" id="new-student-name" required>
-                
                 <label>NetID</label>
                 <input type="text" id="new-student-netid" required>
-                
                 <label>Phone Number</label>
                 <input type="tel" id="new-student-phone" required>
-                
                 <button type="submit" class="btn-primary">Next</button>
             </form>
         </section>
@@ -62,10 +80,8 @@
             <form id="form-add-item" onsubmit="app.saveNewItem(event)">
                 <label>Item Name</label>
                 <input type="text" id="new-item-name" required>
-                
                 <label>Item Number</label>
                 <input type="text" id="new-item-number" required>
-                
                 <button type="submit" class="btn-primary">Save</button>
             </form>
         </section>
@@ -84,9 +100,7 @@
         <div class="modal-content">
             <span class="close-modal" onclick="app.closeModal('modal-person')">&times;</span>
             <div id="person-info-display"></div>
-            
             <hr>
-            
             <div class="checkout-section">
                 <h3>Checked-Out Items</h3>
                 <div class="checkout-actions">
@@ -109,7 +123,7 @@
         <div class="modal-content">
             <div class="modal-header-row">
                 <button class="btn-back" onclick="app.closeItemSearchModal()">Back</button>
-                <h3>Select Item to Checkout</h3>
+                <h3>Select Item</h3>
             </div>
             <input type="text" id="search-checkout-items" placeholder="Search items..." onkeyup="app.renderCheckoutSearch()">
             <div id="checkout-search-list" class="list-container"></div>
