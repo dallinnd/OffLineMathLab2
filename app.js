@@ -8,6 +8,13 @@ const app = {
     init: () => {
         app.loadData();
         app.nav('home');
+        
+        // CLICK OUTSIDE TO CLOSE POPUP
+        window.onclick = (event) => {
+            if (event.target.classList.contains('modal')) {
+                app.closeModal(event.target.id);
+            }
+        };
     },
 
     loadData: () => {
@@ -49,6 +56,7 @@ const app = {
         app.openPersonModal(netId);
     },
 
+    // *** HERE ARE THE BUTTONS FOR EACH STUDENT ***
     renderStudents: () => {
         const query = document.getElementById('search-students').value.toLowerCase();
         const list = document.getElementById('student-list');
@@ -68,7 +76,11 @@ const app = {
                     <strong>${s.name}</strong><br>
                     <small style="color:#64748b">${s.netId} | ${s.phone}</small>
                 </div>
-                <button class="btn-secondary" onclick="app.openPersonModal('${s.netId}')">View</button>
+                <div class="list-actions">
+                    <button class="btn-view" onclick="app.openPersonModal('${s.netId}')">View</button>
+                    <button class="btn-edit-list" onclick="app.editPerson('${s.netId}')">Edit</button>
+                    <button class="btn-delete-list" onclick="app.deletePerson('${s.netId}')">Delete</button>
+                </div>
             `;
             list.appendChild(div);
         });
@@ -91,6 +103,7 @@ const app = {
         alert(`"${name}" added to Inventory`);
     },
 
+    // *** HERE ARE THE BUTTONS FOR EACH ITEM ***
     renderItems: () => {
         const query = document.getElementById('search-items').value.toLowerCase();
         const list = document.getElementById('item-list');
@@ -110,17 +123,23 @@ const app = {
                 : `<span style="background:#d1fae5; color:#10b981; padding:2px 8px; border-radius:10px; font-size:0.8rem; font-weight:bold;">Available</span>`;
 
             div.innerHTML = `
-                <div><strong>${i.name}</strong> <small>(#${i.number})</small></div> 
-                ${statusBadge}
+                <div style="flex-grow:1">
+                    <strong>${i.name}</strong> <small>(#${i.number})</small><br>
+                    ${statusBadge}
+                </div> 
+                <div class="list-actions">
+                    <button class="btn-view" onclick="app.openItemModal('${i.number}')">View</button>
+                    <button class="btn-edit-list" onclick="app.editItem('${i.number}')">Edit</button>
+                    <button class="btn-delete-list" onclick="app.deleteItem('${i.number}')">Delete</button>
+                </div>
             `;
-            div.onclick = () => app.openItemModal(i.number);
             list.appendChild(div);
         });
     },
 
     // --- Modals & Popups ---
     
-    // 1. Person Popup & Delete
+    // 1. Person Popup
     openPersonModal: (netId) => {
         const student = app.data.students.find(s => s.netId === netId);
         if (!student) return;
@@ -134,29 +153,21 @@ const app = {
                     <p style="margin:5px 0; color:#64748b">NetID: ${student.netId}</p>
                     <p style="margin:0; color:#64748b">Phone: ${student.phone}</p>
                 </div>
-                <button class="btn-green" onclick="app.editPerson('${student.netId}')">Edit</button>
             </div>
         `;
         
-        // Add Delete Button Logic specifically for this modal
-        const existingDeleteBtn = document.getElementById('btn-delete-person-placeholder');
-        if(existingDeleteBtn) existingDeleteBtn.remove();
-        
-        // We append the delete button at the very bottom
-        const deleteBtnHtml = `
-            <button class="btn-delete" id="btn-delete-person-placeholder" 
-            onclick="app.deletePerson('${student.netId}')">Delete Student</button>
-        `;
+        // (Note: Removed duplicate Delete button from popup since it is now on the list)
 
         app.renderPersonCheckoutList();
-        
-        // Inject delete button at the end of content
-        document.querySelector('#modal-person .modal-content').insertAdjacentHTML('beforeend', deleteBtnHtml);
         document.getElementById('modal-person').classList.remove('hidden');
     },
 
     deletePerson: (netId) => {
-        if(!confirm(`DELETE STUDENT?\n\nThis will return all items checked out to ${netId} and permanently delete the student record.`)) return;
+        // Find name for confirmation message
+        const student = app.data.students.find(s => s.netId === netId);
+        const name = student ? student.name : netId;
+
+        if(!confirm(`DELETE STUDENT: ${name}?\n\nThis will return all items checked out to them and permanently delete the student record.`)) return;
 
         // 1. Return all items
         app.data.items.forEach(i => {
@@ -169,11 +180,8 @@ const app = {
         app.data.students = app.data.students.filter(s => s.netId !== netId);
 
         app.saveData();
-        
-        // Cleanup UI
-        document.getElementById('btn-delete-person-placeholder').remove();
-        app.closeModal('modal-person');
-        app.renderStudents();
+        app.renderStudents(); // Refresh the list to remove the deleted row
+        app.closeModal('modal-person'); // Close modal if it was open
     },
 
     renderPersonCheckoutList: () => {
@@ -204,14 +212,16 @@ const app = {
             student.name = newName;
             student.phone = newPhone;
             app.saveData();
-            // Refresh
-            document.getElementById('btn-delete-person-placeholder').remove();
-            app.openPersonModal(netId);
+            
+            // Refresh views
+            if (!document.getElementById('modal-person').classList.contains('hidden')) {
+                 app.openPersonModal(netId);
+            }
             app.renderStudents(); 
         }
     },
 
-    // 2. Item Popup & Delete
+    // 2. Item Popup
     openItemModal: (number) => {
         const item = app.data.items.find(i => i.number === number);
         const container = document.getElementById('item-info-display');
@@ -239,28 +249,27 @@ const app = {
                 </div>
             `;
         }
-
+        
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:start;">
                 <div>
                     <h2 style="margin:0; border:none;">${item.name}</h2>
                     <p style="margin:5px 0; color:#64748b">Item #: ${item.number}</p>
                 </div>
-                <button class="btn-green" onclick="app.editItem('${item.number}')">Edit</button>
             </div>
             ${linkSectionHtml}
-            <button class="btn-delete" onclick="app.deleteItem('${item.number}')">Delete Item</button>
         `;
         document.getElementById('modal-item').classList.remove('hidden');
     },
 
     deleteItem: (number) => {
-        if(!confirm(`DELETE ITEM?\n\nIf this item is checked out, it will be unlinked from the student.`)) return;
+        const item = app.data.items.find(i => i.number === number);
+        if(!confirm(`DELETE ITEM: ${item.name}?\n\nIf this item is checked out, it will be unlinked from the student.`)) return;
         
         app.data.items = app.data.items.filter(i => i.number !== number);
         app.saveData();
+        app.renderItems(); // Refresh the list
         app.closeModal('modal-item');
-        app.renderItems();
     },
 
     editItem: (number) => {
@@ -269,7 +278,11 @@ const app = {
         if (newName) {
             item.name = newName;
             app.saveData();
-            app.openItemModal(number);
+            
+            // Refresh views
+             if (!document.getElementById('modal-item').classList.contains('hidden')) {
+                app.openItemModal(number);
+             }
             app.renderItems();
         }
     },
@@ -361,12 +374,6 @@ const app = {
     closeModal: (id) => {
         const el = document.getElementById(id);
         el.classList.add('hidden');
-        
-        // Safety cleanup for dynamically added buttons
-        if(id === 'modal-person') {
-            const btn = document.getElementById('btn-delete-person-placeholder');
-            if(btn) btn.remove();
-        }
     }
 };
 
